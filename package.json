@@ -13,12 +13,12 @@
     "modules",
     "typescript"
   ],
-  "bin": "./bin/esm-index.ts",
-  "repository": "https://github.com/Eterion/index-files.git",
+  "bin": "bin/cli.js",
+  "repository": "https://github.com/Eterion/esm-index.git",
   "author": "Eterion <Eterion@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "esm-index": "ts-node \"bin/esm-index.ts\""
+    "build": "tsc \"src/cli.ts\" --outDir \"bin\""
   },
   "dependencies": {
     "chokidar": "^2.0.3",
