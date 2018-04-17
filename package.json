@@ -1,0 +1,36 @@
+{
+  "name": "esm-index",
+  "version": "0.1.0",
+  "description": "Automatically generate index files for ES6 modules.",
+  "keywords": [
+    "autogenerate",
+    "es6-index",
+    "es6-modules",
+    "es6",
+    "index",
+    "javascript",
+    "module",
+    "modules",
+    "typescript"
+  ],
+  "bin": "./bin/esm-index.ts",
+  "repository": "https://github.com/Eterion/index-files.git",
+  "author": "Eterion <Eterion@users.noreply.github.com>",
+  "license": "MIT",
+  "scripts": {
+    "esm-index": "ts-node \"bin/esm-index.ts\""
+  },
+  "dependencies": {
+    "chokidar": "^2.0.3",
+    "glob": "^7.1.2",
+    "yargs": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/chokidar": "^1.7.5",
+    "@types/glob": "^5.0.35",
+    "@types/node": "^9.6.5",
+    "@types/yargs": "^11.0.0",
+    "ts-node": "^5.0.1",
+    "typescript": "^2.8.1"
+  }
+}
