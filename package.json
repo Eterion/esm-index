@@ -1,6 +1,6 @@
 {
   "name": "esm-index",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Automatically generate index files for ES6 modules.",
   "keywords": [
     "autogenerate",
