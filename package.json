@@ -18,7 +18,9 @@
   "author": "Eterion <Eterion@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc \"src/cli.ts\" --outDir \"bin\""
+    "build": "tsc \"src/cli.ts\" --outDir \"bin\"",
+    "release": "npm run build && uglifyjs \"bin/cli.js\" --compress --mangle --output \"bin/cli.js\"",
+    "watch": "tsc \"src/cli.ts\" --outDir \"bin\" --watch"
   },
   "dependencies": {
     "chokidar": "^2.0.3",
@@ -28,9 +30,11 @@
   "devDependencies": {
     "@types/chokidar": "^1.7.5",
     "@types/glob": "^5.0.35",
-    "@types/node": "^9.6.5",
+    "@types/node": "^9.6.14",
+    "@types/uglify-js": "^3.0.2",
     "@types/yargs": "^11.0.0",
     "ts-node": "^5.0.1",
-    "typescript": "^2.8.1"
+    "typescript": "^2.8.3",
+    "uglify-js": "^3.3.24"
   }
 }

@@ -17,33 +17,35 @@ import, without manually maintaining the index file.
 
 ## Configuration File
 
-The program is controlled by placement of `.indexrc.json` configuration files.
-Create this file wherever you want to have maintained the index file with ES6
-exports.
+The program is controlled by placement of `.esm-indexrc.json` (or
+`.indexrc.json`) configuration files. Create this file wherever you want to have
+maintained the index file with ES6 exports.
 
 ```
 $ esm-index <directory> [options]
 ```
 
-The above command will search for configuration files in the _modules_ directory
-and generates index files if possible (new index file is generated only when
-changes are detected). The contents of the json configuration file can be empty
-(if your other tools won't yell at you), or with following options (all of them
-are optional).
+The above command will search for configuration files in the _directory_ and
+generates index files if possible (new index file is generated only when changes
+are detected). The contents of the json configuration file can be empty (if your
+other tools won't yell at you), or with following options (all of them are
+optional).
 
-| Option        | Description                                                                       |
-| ------------- | --------------------------------------------------------------------------------- |
-| `ignoreFiles` | Array of strings or regular expressions (properly escaped) of ignored file names. |
+| Option          | Description                                                                                              |
+| --------------- | -------------------------------------------------------------------------------------------------------- |
+| `fileExtension` | File extension that is used to filter out modules.                                                       |
+| `fileName`      | File name of the generated index file.                                                                   |
+| `ignoreFiles`   | List of strings or regular expressions (properly escaped, starts and ends with /) of ignored file names. |
 
 ## Example
 
-Assuming the following file structure, the existence of `.indexrc.json` file
+Assuming the following file structure, the existence of `.esm-indexrc.json` file
 tells the program to create index file with default exports of `bar.js` and
 `foo.js` modules.
 
 ```
 modules
-|-- .indexrc.json
+|-- .esm-indexrc.json
 |-- bar.js
 |-- foo.js
 ```
@@ -62,12 +64,13 @@ example, if you want to use typescript files instead of javascript, the command
 line would look like this.
 
 ```
-$ esm-index \"modules/**\" --ext ts
+$ esm-index <directory> --ext ts
 ```
 
 | Option      | Default | Description                                             |
 | ----------- | ------- | ------------------------------------------------------- |
 | `--ext`     | js      | File extension used for index files and internal filter |
+| `--name`    | index   | File name used for the index files                      |
 | `--help`    |         | Show help                                               |
 | `--version` |         | Show version number                                     |
 | `--watch`   | false   | Enables watch mode                                      |
@@ -82,4 +85,4 @@ particular order.
 * Make configuration file optional
 * Recursive import (via option)
 * Support cosmiconfig
-* Support for `require` instead of import (via option)
+* Support for `require` instead of import (via option or custom template)
