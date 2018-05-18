@@ -221,10 +221,13 @@ function createFile(rc: string, options: Options): void {
       });
     } else {
       fs.access(index, fs.constants.F_OK, err => {
-        if (err) throw err;
-        fs.unlink(index, err => {
-          if (err) throw err;
-        });
+        if (!err) {
+          fs.unlink(index, err => {
+            if (err) {
+              throw err;
+            }
+          });
+        }
       });
     }
   });
