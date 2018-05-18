@@ -82,7 +82,10 @@ function getModules(
 ) {
   const root = path.dirname(rc);
   fs.readdir(root, (err, files) => {
-    if (err) throw err;
+    if (err) {
+      console.log(`Cannot read ${root} directory.`);
+      throw err;
+    }
     const promises = files.map(
       file =>
         new Promise((resolve: (module: Module | null) => void, reject) => {
@@ -101,9 +104,7 @@ function getModules(
                 ),
                 fs.constants.R_OK,
                 err => {
-                  if (err) {
-                    resolve(null);
-                  }
+                  if (err) resolve(null);
                   resolve({
                     isIndex: true,
                     name: path.basename(file, '.' + options.fileExtension),
@@ -155,9 +156,15 @@ function getModules(
           });
         })
     );
-    Promise.all(promises).then(modules => {
-      callback(<Module[]>modules.filter(module => module !== null));
-    });
+    Promise.all(promises)
+      .then(modules => {
+        callback(<Module[]>modules.filter(module => module !== null));
+      })
+      .catch(err => {
+        if (err) {
+          throw err;
+        }
+      });
   });
 }
 
@@ -206,14 +213,23 @@ function createFile(rc: string, options: Options): void {
       fs.access(index, fs.constants.R_OK, err => {
         if (err) {
           fs.writeFile(index, contents, err => {
-            if (err) throw err;
+            if (err) {
+              console.log(`Cannot write ${index} file.`);
+              throw err;
+            }
           });
         } else {
           fs.readFile(index, 'utf8', (err, data) => {
-            if (err) throw err;
+            if (err) {
+              console.log(`Cannot read ${index} file.`);
+              throw err;
+            }
             if (!compareContents(contents, data)) {
               fs.writeFile(index, contents, err => {
-                if (err) throw err;
+                if (err) {
+                  console.log(`Cannot write ${index} file.`);
+                  throw err;
+                }
               });
             }
           });
@@ -224,6 +240,7 @@ function createFile(rc: string, options: Options): void {
         if (!err) {
           fs.unlink(index, err => {
             if (err) {
+              console.log(`Cannot unlink ${index} file.`);
               throw err;
             }
           });
@@ -238,10 +255,15 @@ function createFile(rc: string, options: Options): void {
 // in configuration file.
 
 glob(`${args._[0] || './**'}/.@(esm-index|index)rc.json`, (err, files) => {
-  if (err) throw err;
+  if (err) {
+    throw err;
+  }
   files.forEach(rc => {
     fs.readFile(rc, 'utf8', (err, config) => {
-      if (err) throw err;
+      if (err) {
+        console.log(`Cannot read ${rc} file.`);
+        throw err;
+      }
       let options: Options = (<any>Object).assign(
         <Options>{
           fileExtension: args.ext || 'js',
