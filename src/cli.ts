@@ -13,6 +13,11 @@ interface Options {
   ignoreFiles: string[];
 }
 
+interface Module {
+  isIndex: boolean;
+  name: string;
+}
+
 const args = yargs
   .describe('ext', 'File extension used for index files and internal filter')
   .describe('name', 'File name used for the index files')
@@ -73,62 +78,111 @@ function compareContents(...data: string[]): boolean {
 function getModules(
   rc: string,
   options: Options,
-  callback: (modules: string[]) => void
+  callback: (modules: Module[]) => void
 ) {
-  fs.readdir(path.dirname(rc), (err, files) => {
+  const root = path.dirname(rc);
+  fs.readdir(root, (err, files) => {
     if (err) throw err;
-    callback(
-      files
-        .filter(file => {
-          let pass = true;
-          [
-            /\.d\.ts$/,
-            new RegExp(`\\.(?:spec|test)\\.${options.fileExtension}`),
-            new RegExp(`^${options.fileName}\\.${options.fileExtension}`),
-          ]
-            .concat(
-              options.ignoreFiles.map(
-                (name: string) =>
-                  new RegExp(
-                    /^\//.test(name)
-                      ? `${name.substring(1, name.length - 1)}`
-                      : `^${path.basename(
-                          name,
-                          '.' + options.fileExtension
-                        )}\\.${options.fileExtension}`
-                  )
-              )
-            )
-            .forEach((re: RegExp) => {
-              if (
-                !new RegExp(`\\.${options.fileExtension}$`).test(file) ||
-                re.test(file)
-              ) {
-                if (pass) {
-                  pass = false;
+    const promises = files.map(
+      file =>
+        new Promise((resolve: (module: Module | null) => void, reject) => {
+          fs.stat(path.join(root, file), (err, stats) => {
+            if (err) {
+              reject(err);
+            }
+
+            // Resolve module as child esm-index.
+            if (stats.isDirectory()) {
+              fs.access(
+                path.join(
+                  root,
+                  file,
+                  `${options.fileName}.${options.fileExtension}`
+                ),
+                fs.constants.R_OK,
+                err => {
+                  if (err) {
+                    resolve(null);
+                  }
+                  resolve({
+                    isIndex: true,
+                    name: path.basename(file, '.' + options.fileExtension),
+                  });
                 }
-              }
-            });
-          return pass;
+              );
+            }
+
+            // Resolve module as file.
+            else {
+              let pass = true;
+              [
+                /\.d\.ts$/,
+                new RegExp(`\\.(?:spec|test)\\.${options.fileExtension}`),
+                new RegExp(`^${options.fileName}\\.${options.fileExtension}`),
+              ]
+                .concat(
+                  options.ignoreFiles.map(
+                    (name: string) =>
+                      new RegExp(
+                        /^\//.test(name)
+                          ? `${name.substring(1, name.length - 1)}`
+                          : `^${path.basename(
+                              name,
+                              '.' + options.fileExtension
+                            )}\\.${options.fileExtension}`
+                      )
+                  )
+                )
+                .forEach((re: RegExp) => {
+                  if (
+                    !new RegExp(`\\.${options.fileExtension}$`).test(file) ||
+                    re.test(file)
+                  ) {
+                    if (pass) {
+                      pass = false;
+                    }
+                  }
+                });
+              resolve(
+                pass
+                  ? {
+                      isIndex: false,
+                      name: path.basename(file, '.' + options.fileExtension),
+                    }
+                  : null
+              );
+            }
+          });
         })
-        .map(file => path.basename(file, '.' + options.fileExtension))
     );
+    Promise.all(promises).then(modules => {
+      callback(<Module[]>modules.filter(module => module !== null));
+    });
   });
 }
 
 /**
  * Returns contents for index files generated from provided list of modules.
- * @param {string[]} modules List of paths to modules to be imported.
+ * @param {object[]} modules List of paths to modules to be imported.
  */
 
-function createFileContents(modules: string[]): string {
-  return modules.length
-    ? modules.reduce(
-        (src, module) =>
-          src + `export { default as ${module} } from './${module}';\r\n`,
-        ''
-      )
-    : '';
+function createFileContents(modules: Module[]): string {
+  let src = '';
+  if (modules.length) {
+    const indexes = modules.filter(module => module.isIndex == true);
+    src = modules.reduce((src, module) => {
+      return (
+        src +
+        (module.isIndex
+          ? `import * as ${module.name} from './${module.name}';\r\n`
+          : `export { default as ${module.name} } from './${module.name}';\r\n`)
+      );
+    }, src);
+    if (indexes.length) {
+      src = src + `export { ${indexes.map(module => module.name).join(', ')} }`;
+    }
+  }
+  return src;
 }
 
 /**
