@@ -138,7 +138,7 @@ function createFile(rc: string, options: Options): void {
  */
 
 function getConfig(src: string, callback: (files: string[]) => void): void {
-  glob(`${src || './**'}/.@(esm-index|index)rc.json`, (err, files) => {
+  glob(`${src || './**'}/.esm-indexrc.json`, (err, files) => {
     if (err) {
       console.log('Failed to read files.');
       throw err;

@@ -17,9 +17,9 @@ import, without manually maintaining the index file.
 
 ## Configuration File
 
-The program is controlled by placement of `.esm-indexrc.json` (or
-`.indexrc.json`) configuration files. Create this file wherever you want to have
-maintained the index file with ES6 exports.
+The program is controlled by placement of `.esm-indexrc.json` configuration
+files. Create this file wherever you want to have maintained the index file with
+ES6 exports.
 
 ```
 $ esm-index <directory> [options]
@@ -42,7 +42,8 @@ optional).
 
 Assuming the following file structure, the existence of `.esm-indexrc.json` file
 tells the program to create index file with default exports of `bar.js` and
-`foo.js` modules.
+`foo.js` modules. **Note, each module must have `default export` to work
+properly.**
 
 ```
 modules
@@ -52,9 +53,6 @@ modules
 ```
 
 Contents of the index file will be generated as follows.
-
-> Note, at this time the package doesn't check what is actually exported, the
-> script is just assuming each module has default export, that's all.
 
 ```js
 export { default as bar } from './bar';
