@@ -7,6 +7,7 @@
     "es6-index",
     "es6-modules",
     "es6",
+    "esm",
     "index",
     "javascript",
     "module",
@@ -24,16 +25,17 @@
   },
   "dependencies": {
     "chokidar": "^2.0.3",
+    "es6-promise": "^4.2.4",
     "glob": "^7.1.2",
     "yargs": "^11.0.0"
   },
   "devDependencies": {
     "@types/chokidar": "^1.7.5",
+    "@types/es6-promise": "^3.3.0",
     "@types/glob": "^5.0.35",
     "@types/node": "^9.6.18",
     "@types/uglify-js": "^3.0.2",
     "@types/yargs": "^11.0.0",
-    "es6-promise": "^4.2.4",
     "ts-node": "^5.0.1",
     "typescript": "^2.8.3",
     "uglify-js": "^3.3.26"

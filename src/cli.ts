@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { Promise } from 'es6-promise';
 import * as chokidar from 'chokidar';
 import * as crypto from 'crypto';
@@ -12,6 +10,7 @@ interface Options {
   fileExtension: string;
   fileName: string;
   ignoreFiles: string[];
+  recursiveSearch: boolean;
 }
 
 interface Module {
@@ -23,6 +22,130 @@ const args = yargs
   .describe('ext', 'File extension used for index files and internal filter')
   .describe('name', 'File name used for the index files')
   .describe('watch', 'Enables watch mode').argv;
+
+/**
+ * Compares hash of two or more data strings and returns true if no differences
+ * were found. Line that start with double slash (comments) are ignored and not
+ * taken into account by the comparison.
+ *
+ * @param {string[]} data List of data strings to be compared.
+ */
+
+function compareContents(...data: string[]): boolean {
+  let pass = true;
+  if (data.length) {
+    let master = getHash(data[0]);
+    data.slice(1).forEach(contents => {
+      if (master != getHash(contents)) {
+        if (pass) {
+          pass = false;
+        }
+      }
+    });
+  }
+  return pass;
+}
+
+/**
+ * Returns contents for index file generated from provided list of modules.
+ * @param {object[]} modules List of paths to modules to be imported.
+ */
+
+function createContents(modules: Module[]): string {
+  let src = '';
+  if (modules.length) {
+    const esmIndex = modules.filter(module => module.isIndex === true);
+    src = modules.reduce((src, module) => {
+      return (
+        src +
+        (module.isIndex
+          ? `import * as ${module.name} from './${module.name}';\r\n`
+          : `export { default as ${module.name} } from './${module.name}';\r\n`)
+      );
+    }, src);
+    if (esmIndex.length) {
+      src =
+        src +
+        `export { ${esmIndex.map(module => module.name).join(', ')} }\r\n`;
+    }
+  }
+  return src;
+}
+
+/**
+ * Creates index file with default exports according to a list of file names
+ * that passed the ignore filter. If index file already exists, it compares the
+ * list of exports with the current list and generates new contents when needed.
+ *
+ * @param {string} rc Path to configuration file.
+ * @param {object} options Options (passed cmd arguments).
+ */
+
+function createFile(rc: string, options: Options): void {
+  getModules(rc, options, modules => {
+    let index = path.join(
+      path.dirname(rc),
+      `${options.fileName}.${options.fileExtension}`
+    );
+    let contents: string = createContents(modules);
+    if (modules.length) {
+      fs.access(index, fs.constants.R_OK, err => {
+        if (err) {
+          fs.writeFile(index, contents, err => {
+            if (err) {
+              console.log(`Cannot write ${index} file.`);
+              throw err;
+            }
+          });
+        } else {
+          fs.readFile(index, 'utf8', (err, data) => {
+            if (err) {
+              console.log(`Cannot read ${index} file.`);
+              throw err;
+            }
+            if (!compareContents(contents, data)) {
+              fs.writeFile(index, contents, err => {
+                if (err) {
+                  console.log(`Cannot write ${index} files.`);
+                  throw err;
+                }
+              });
+            }
+          });
+        }
+      });
+    } else {
+      fs.access(index, fs.constants.F_OK, err => {
+        if (!err) {
+          fs.unlink(index, err => {
+            if (err) {
+              console.log(`Cannot unlink ${index} file.`);
+              throw err;
+            }
+          });
+        }
+      });
+    }
+  });
+}
+
+/**
+ * Reads provided node-glob path and provides callback with file list of found
+ * configuration files.
+ *
+ * @param {string} src Node-glob pattern.
+ * @param {function} callback Callback with files as parameter.
+ */
+
+function getConfig(src: string, callback: (files: string[]) => void): void {
+  glob(`${src || './**'}/.@(esm-index|index)rc.json`, (err, files) => {
+    if (err) {
+      console.log('Failed to read files.');
+      throw err;
+    }
+    callback(files);
+  });
+}
 
 /**
  * Returns computed hash from provided data string.
@@ -42,38 +165,12 @@ function getHash(data: string): string {
 }
 
 /**
- * Compares hash of two or more data strings and returns true if no differences
- * were found. Lines that start with double slash (comments) are ignored and not
- * part of the computed hash string.
- *
- * @param {string} data List of data strings to be combared.
- */
-
-function compareContents(...data: string[]): boolean {
-  let pass = true;
-  if (data.length) {
-    let master = getHash(data[0]);
-    data.slice(1).forEach(contents => {
-      if (master != getHash(contents)) {
-        if (pass) {
-          pass = false;
-        }
-      }
-    });
-  }
-  return pass;
-}
-
-/**
  * Reads through directory in which the configuration file is placed. Callback
- * provides a parameter with list of detected modules.
+ * provides a parameter with a list of detected modules.
  *
  * @param {string} rc Path to configuration file.
- * @param {string} [options.fileName='index'] Name of generated index file.
- * @param {string} [options.fileExtension='js'] File extension that is used to
- * filter modules.
- * @param {string[]} [options.ignoreFiles=[]] List of ignored files.
- * @param {function} callback Callback with list of module paths as parameter.
+ * @param {object} options Options (passed cmd arguments).
+ * @param {function} callback Callback with a list of modules as parameter.
  */
 
 function getModules(
@@ -97,21 +194,31 @@ function getModules(
 
             // Resolve module as child esm-index.
             if (stats.isDirectory()) {
-              fs.access(
-                path.join(
-                  root,
-                  file,
-                  `${options.fileName}.${options.fileExtension}`
-                ),
-                fs.constants.R_OK,
-                err => {
-                  if (err) resolve(null);
-                  resolve({
-                    isIndex: true,
-                    name: path.basename(file, '.' + options.fileExtension),
-                  });
-                }
-              );
+              if (options.recursiveSearch) {
+                getConfig(path.join(root, file), files => {
+                  if (files.length) {
+                    getOptions(files[0], options => {
+                      getModules(files[0], options, modules => {
+                        if (modules.length) {
+                          resolve({
+                            isIndex: true,
+                            name: path.basename(
+                              file,
+                              '.' + options.fileExtension
+                            ),
+                          });
+                        } else {
+                          resolve(null);
+                        }
+                      });
+                    });
+                  } else {
+                    resolve(null);
+                  }
+                });
+              } else {
+                resolve(null);
+              }
             }
 
             // Resolve module as file.
@@ -127,7 +234,7 @@ function getModules(
                     (name: string) =>
                       new RegExp(
                         /^\//.test(name)
-                          ? `${name.substring(1, name.length - 1)}`
+                          ? name.substring(1, name.length - 1)
                           : `^${path.basename(
                               name,
                               '.' + options.fileExtension
@@ -145,24 +252,36 @@ function getModules(
                     }
                   }
                 });
-              resolve(
-                pass
-                  ? {
-                      isIndex: false,
-                      name: path.basename(file, '.' + options.fileExtension),
-                    }
-                  : null
-              );
+              if (pass) {
+                resolve({
+                  isIndex: false,
+                  name: path.basename(file, '.' + options.fileExtension),
+                });
+              } else {
+                resolve(null);
+              }
             }
           });
         })
     );
     Promise.all(promises)
       .then(modules => {
-        callback(<Module[]>modules.filter(module => module !== null));
+        let list: Module[] = <Module[]>modules.filter(
+          module => module !== null
+        );
+        callback(
+          list.sort((a, b) => {
+            if (a.isIndex) return -1;
+            if (b.isIndex) return 1;
+            if (a.name < b.name) return -1;
+            if (a.name > b.name) return 1;
+            return 0;
+          })
+        );
       })
       .catch(err => {
         if (err) {
+          console.log('Failed to read files.');
           throw err;
         }
       });
@@ -170,109 +289,40 @@ function getModules(
 }
 
 /**
- * Returns contents for index files generated from provided list of modules.
- * @param {object[]} modules List of paths to modules to be imported.
- */
-
-function createFileContents(modules: Module[]): string {
-  let src = '';
-  if (modules.length) {
-    const indexes = modules.filter(module => module.isIndex == true);
-    src = modules.reduce((src, module) => {
-      return (
-        src +
-        (module.isIndex
-          ? `import * as ${module.name} from './${module.name}';\r\n`
-          : `export { default as ${module.name} } from './${module.name}';\r\n`)
-      );
-    }, src);
-    if (indexes.length) {
-      src = src + `export { ${indexes.map(module => module.name).join(', ')} }`;
-    }
-  }
-  return src;
-}
-
-/**
- * Creates index file with default exports according to a list of file names
- * that passed the ignore filter. If index file already exists, it compares the
- * list of exports with the current list and generates new contents only when
- * needed.
+ * Reads configuration files and provides callback with options object as
+ * parameter.
  *
  * @param {string} rc Path to configuration file.
- * @param {string} ext File extension to be imported.
+ * @param {function} callback Callback with options as parameter.
  */
 
-function createFile(rc: string, options: Options): void {
-  getModules(rc, options, modules => {
-    let index = path.join(
-      path.dirname(rc),
-      `${options.fileName}.${options.fileExtension}`
-    );
-    let contents: string = createFileContents(modules);
-    if (modules.length) {
-      fs.access(index, fs.constants.R_OK, err => {
-        if (err) {
-          fs.writeFile(index, contents, err => {
-            if (err) {
-              console.log(`Cannot write ${index} file.`);
-              throw err;
-            }
-          });
-        } else {
-          fs.readFile(index, 'utf8', (err, data) => {
-            if (err) {
-              console.log(`Cannot read ${index} file.`);
-              throw err;
-            }
-            if (!compareContents(contents, data)) {
-              fs.writeFile(index, contents, err => {
-                if (err) {
-                  console.log(`Cannot write ${index} file.`);
-                  throw err;
-                }
-              });
-            }
-          });
-        }
-      });
-    } else {
-      fs.access(index, fs.constants.F_OK, err => {
-        if (!err) {
-          fs.unlink(index, err => {
-            if (err) {
-              console.log(`Cannot unlink ${index} file.`);
-              throw err;
-            }
-          });
-        }
-      });
+function getOptions(rc: string, callback: (options: Options) => void): void {
+  fs.readFile(rc, 'utf8', (err, config) => {
+    if (err) {
+      console.log(`Cannot read ${rc} file.`);
+      throw err;
     }
-  });
-}
-
-// Search for index configurations and creates index files according to its
-// contents. Specific file names can be ignored via ignoreFiles property array
-// in configuration file.
-
-glob(`${args._[0] || './**'}/.@(esm-index|index)rc.json`, (err, files) => {
-  if (err) {
-    throw err;
-  }
-  files.forEach(rc => {
-    fs.readFile(rc, 'utf8', (err, config) => {
-      if (err) {
-        console.log(`Cannot read ${rc} file.`);
-        throw err;
-      }
-      let options: Options = (<any>Object).assign(
+    callback(
+      (<any>Object).assign(
         <Options>{
           fileExtension: args.ext || 'js',
           fileName: args.name || 'index',
           ignoreFiles: [],
+          recursiveSearch: true,
         },
         JSON.parse(config || '{}')
-      );
+      )
+    );
+  });
+}
+
+// Search for index configuration files and creates index files according to its
+// contents and options. Specific file names can be ignored via ignoreFiles
+// property in configuration file.
+
+getConfig(args._[0], files => {
+  files.forEach(rc => {
+    getOptions(rc, options => {
       createFile(rc, options);
       if (args.watch) {
         chokidar

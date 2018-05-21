@@ -31,11 +31,12 @@ are detected). The contents of the json configuration file can be empty (if your
 other tools won't yell at you), or with following options (all of them are
 optional).
 
-| Option          | Description                                                                                              |
-| --------------- | -------------------------------------------------------------------------------------------------------- |
-| `fileExtension` | File extension that is used to filter out modules.                                                       |
-| `fileName`      | File name of the generated index file.                                                                   |
-| `ignoreFiles`   | List of strings or regular expressions (properly escaped, starts and ends with /) of ignored file names. |
+| Option            | Description                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------------- |
+| `fileExtension`   | File extension that is used to filter out modules.                                                       |
+| `fileName`        | File name of the generated index file.                                                                   |
+| `ignoreFiles`     | List of strings or regular expressions (properly escaped, starts and ends with /) of ignored file names. |
+| `recursiveSearch` | If enabled, child folders with index files will be added to export list as well.                         |
 
 ## Example
 
@@ -51,6 +52,9 @@ modules
 ```
 
 Contents of the index file will be generated as follows.
+
+> Note, at this time the package doesn't check what is actually exported, the
+> script is just assuming each module has default export, that's all.
 
 ```js
 export { default as bar } from './bar';
@@ -70,10 +74,10 @@ $ esm-index <directory> --ext ts
 | Option      | Default | Description                                             |
 | ----------- | ------- | ------------------------------------------------------- |
 | `--ext`     | js      | File extension used for index files and internal filter |
-| `--name`    | index   | File name used for the index files                      |
 | `--help`    |         | Show help                                               |
+| `--name`    | index   | File name used for the index files                      |
 | `--version` |         | Show version number                                     |
-| `--watch`   | false   | Enables watch mode                                      |
+| `--watch`   |         | Enables watch mode                                      |
 
 ## Future
 
@@ -83,6 +87,6 @@ particular order.
 * Add node API
 * Detect what kind of export the module actually has, if any
 * Make configuration file optional
-* Recursive import (via option)
+* ~~Recursive import (via option)~~ `^v1.0.3`
 * Support cosmiconfig
 * Support for `require` instead of import (via option or custom template)
