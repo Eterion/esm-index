@@ -86,6 +86,6 @@ particular order.
 * Add node API
 * Detect what kind of export the module actually has, if any
 * Make configuration file optional
-* ~~Recursive import (via option)~~ `^v1.0.3`
+* ~~Recursive import (via option)~~ `^v1.1.0`
 * Support cosmiconfig
 * Support for `require` instead of import (via option or custom template)
