@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { Promise } from 'es6-promise';
 import * as chokidar from 'chokidar';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
