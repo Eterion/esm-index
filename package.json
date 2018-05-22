@@ -14,30 +14,28 @@
     "modules",
     "typescript"
   ],
-  "bin": "bin/cli.js",
+  "bin": "./dist/bin.js",
+  "main": "./dist/index.js",
   "repository": "https://github.com/Eterion/esm-index.git",
   "author": "Eterion <Eterion@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc \"src/cli.ts\" --outDir \"bin\"",
-    "release": "npm run build && uglifyjs \"bin/cli.js\" --compress --mangle --output \"bin/cli.js\"",
-    "watch": "tsc \"src/cli.ts\" --outDir \"bin\" --watch"
+    "build": "tsc --rootDir \"./src\" --outDir \"./dist\"",
+    "test": "yarn build && node \"./dist/bin.js\""
   },
   "dependencies": {
     "chokidar": "^2.0.3",
-    "es6-promise": "^4.2.4",
+    "core-js": "^2.5.6",
     "glob": "^7.1.2",
     "yargs": "^11.0.0"
   },
   "devDependencies": {
     "@types/chokidar": "^1.7.5",
-    "@types/es6-promise": "^3.3.0",
+    "@types/core-js": "^0.9.46",
     "@types/glob": "^5.0.35",
-    "@types/node": "^9.6.18",
-    "@types/uglify-js": "^3.0.2",
+    "@types/node": "^10.1.2",
     "@types/yargs": "^11.0.0",
-    "ts-node": "^5.0.1",
-    "typescript": "^2.8.3",
-    "uglify-js": "^3.3.26"
+    "ts-node": "^6.0.3",
+    "typescript": "^2.8.3"
   }
 }
