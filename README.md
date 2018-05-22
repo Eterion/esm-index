@@ -83,7 +83,7 @@ $ esm-index <directory> --ext ts
 There are some things I want to maybe add in the future, so here's a list in no
 particular order.
 
-* Add node API
+* ~~Add node API~~ `v1.2.0`
 * Detect what kind of export the module actually has, if any
 * Make configuration file optional
 * ~~Recursive import (via option)~~ `^v1.1.0`
