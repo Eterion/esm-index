@@ -21,6 +21,7 @@
   "author": "Eterion <Eterion@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
+    "build-watch": "tsc --rootDir \"./src\" --outDir \"./dist\" --watch",
     "build": "tsc --rootDir \"./src\" --outDir \"./dist\"",
     "prepublish": "yarn release",
     "release": "yarn build && yarn uglify-bin && yarn uglify-index",
