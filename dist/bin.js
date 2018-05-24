@@ -1,10 +1,2 @@
 #!/usr/bin/env node
-"use strict";
-exports.__esModule = true;
-var index_1 = require("./index");
-var yargs = require("yargs");
-var args = yargs
-    .describe('ext', 'File extension used for index files and internal filter')
-    .describe('name', 'File name used for the index files')
-    .describe('watch', 'Enables watch mode').argv;
-index_1["default"](args._[0], {}, args);
+"use strict";exports.__esModule=!0;var chokidar=require("chokidar"),path=require("path"),yargs=require("yargs"),index_1=require("./index"),args=yargs.describe("ext","File extension used for index files and internal filter").describe("log","Displays log messages when modules are evaluated").describe("name","File name used for the index files").describe("watch","Enables watch mode").argv;index_1.default(args._[0],{fileExtension:args.ext,fileName:args.name}).then(function(e){e.forEach(function(e){var a=e.rc,i=e.options,n=e.message;args.log&&console.log(n),args.watch&&chokidar.watch(path.dirname(a),{ignored:[!new RegExp("."+i.fileExtension+"$"),i.fileName+"."+i.fileExtension]}).on("all",function(){index_1.default(a,i).then(function(e){e.forEach(function(e){var a=e.code,i=e.message;args.log&&["add","update","remove"].includes(a)&&console.log(i)})})})})});

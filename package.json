@@ -7,6 +7,7 @@
     "es6-index",
     "es6-modules",
     "es6",
+    "esm-index",
     "esm",
     "index",
     "javascript",
@@ -21,7 +22,12 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --rootDir \"./src\" --outDir \"./dist\"",
-    "test": "yarn build && node \"./dist/bin.js\""
+    "start": "node \"./dist/bin.js\"",
+    "test": "yarn build && yarn start",
+    "uglify-bin": "uglifyjs \"./dist/bin.js\" -c -m -o \"./dist/bin.js\"",
+    "uglify-index": "uglifyjs \"./dist/index.js\" -c -m -o \"./dist/index.js\"",
+    "release": "yarn build && yarn uglify-bin && yarn uglify-index",
+    "watch": "yarn start --watch"
   },
   "dependencies": {
     "chokidar": "^2.0.3",
@@ -34,8 +40,10 @@
     "@types/core-js": "^0.9.46",
     "@types/glob": "^5.0.35",
     "@types/node": "^10.1.2",
+    "@types/uglify-js": "^3.0.2",
     "@types/yargs": "^11.0.0",
     "ts-node": "^6.0.3",
-    "typescript": "^2.8.3"
+    "typescript": "^2.8.3",
+    "uglify-js": "^3.3.27"
   }
 }

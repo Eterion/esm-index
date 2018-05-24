@@ -1,437 +1,479 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { Promise } from 'core-js';
-import * as glob from 'glob';
+import { Promise, Object } from 'core-js';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as glob from 'glob';
+import * as path from 'path';
 
-interface Arguments {
-  [key: string]: string;
+interface Module {
+  isIndex: boolean;
+  path: string;
 }
 
+type ModuleInList = Module | null;
+
 interface Options {
+  [index: string]: any;
   fileExtension?: string;
+  fileExtensionInPath?: boolean;
   fileName?: string;
   ignoreFiles?: string[];
   recursiveSearch?: boolean;
 }
 
-interface Module {
-  isIndex: boolean;
-  name: string;
+interface Result {
+  code: 'add' | 'no-change' | 'update' | 'remove';
+  message: string;
+  options: Options;
+  rc: string;
 }
 
-namespace ResolveModule {
+namespace Core {
   /**
-   * Returns a promise with resolved file path as directory.
-   * @param {string} root Path to directory where configuration file is placed in.
-   * @param {string} file File name.
-   * @param {object} options Configuration options.
+   * Reads through provided node-glob pattern and returns a promise with files.
+   * @param pattern Node-glob pattern.
    */
 
-  export function asDirectory(
-    root: string,
-    file: string,
-    options: Options
-  ): Promise<Module | null> {
+  export function read(pattern: string): Promise<string[]> {
     return new Promise((resolve, reject) => {
-      if (options.recursiveSearch) {
-        readPattern(path.join(root, file))
-          .then(files => {
-            if (files.length) {
-              getOptions(files[0])
-                .then(options => {
-                  getModules(files[0], options)
-                    .then(modules => {
-                      if (modules.length) {
-                        resolve({
-                          isIndex: true,
-                          name: path.basename(
-                            file,
-                            '.' + options.fileExtension
-                          ),
+      const configName = '.esm-indexrc.json';
+      glob(
+        `./${pattern.replace(new RegExp(`/${configName}$`), '')}/${configName}`,
+        (err, files) => {
+          if (err) {
+            console.log(`Failed to read ${pattern} pattern.`);
+            reject(err);
+          }
+          resolve(files);
+        }
+      );
+    });
+  }
+
+  /**
+   * Creates index file with generated contents and returns a promise with
+   * object that contains path to configuration file, options object and result
+   * message.
+   *
+   * @param rc Path to configuration file.
+   * @param args Command line arguments merged with options.
+   */
+
+  export function write(rc: string, options: Options): Promise<Result> {
+    return new Promise((resolve, reject) => {
+      Options.read(rc, options)
+        .then(options => {
+          Module.list(rc, options)
+            .then(modules => {
+              let index = path.join(
+                path.dirname(rc),
+                `${options.fileName}.${options.fileExtension}`
+              );
+              let indexPath = path.resolve(index);
+              let contents = Contents.create(modules);
+              let result = { rc, options };
+              if (modules.length) {
+                fs.access(index, fs.constants.R_OK, err => {
+                  if (err) {
+                    fs.writeFile(index, contents, err => {
+                      if (err) {
+                        console.log(`Cannot write ${indexPath} file.`);
+                        reject(err);
+                      }
+                      resolve(
+                        Object.assign({}, result, {
+                          code: 'add',
+                          message: `\x1b[32m> Created "${indexPath}"\x1b[0m`,
+                        })
+                      );
+                    });
+                  } else {
+                    fs.readFile(index, 'utf8', (err, data) => {
+                      if (err) {
+                        console.log(`Cannot read ${indexPath} file.`);
+                        reject(err);
+                      }
+                      if (Contents.compare(contents, data)) {
+                        fs.writeFile(index, contents, err => {
+                          if (err) {
+                            console.log(`Cannot write ${indexPath} file.`);
+                            reject(err);
+                          }
+                          resolve(
+                            Object.assign({}, result, {
+                              code: 'update',
+                              message: `\x1b[33m> Updated "${indexPath}"\x1b[0m`,
+                            })
+                          );
                         });
                       } else {
-                        resolve(null);
+                        resolve(
+                          Object.assign({}, result, {
+                            code: 'no-change',
+                            message: `> No changes in "${indexPath}"`,
+                          })
+                        );
                       }
-                    })
-                    .catch(err => {
-                      reject(err);
                     });
-                })
-                .catch(err => {
-                  reject(err);
+                  }
                 });
-            } else {
-              resolve(null);
-            }
-          })
-          .catch(err => {
-            reject(err);
-          });
-      } else {
-        resolve(null);
-      }
+              } else {
+                fs.access(index, err => {
+                  if (!err) {
+                    fs.unlink(index, err => {
+                      if (err) {
+                        console.log(`Cannot unlink ${indexPath} file.`);
+                        reject(err);
+                      }
+                      resolve(
+                        Object.assign({}, result, {
+                          code: 'remove',
+                          message: `\x1b[31m> Removed "${indexPath}"\x1b[0m`,
+                        })
+                      );
+                    });
+                  }
+                });
+              }
+            })
+            .catch(err => {
+              console.log('Failed to read list of modules.');
+              reject(err);
+            });
+        })
+        .catch(err => {
+          console.log(`Failed to read ${rc} file.`);
+          reject(err);
+        });
     });
   }
+}
 
+namespace Contents {
   /**
-   * Returns a promise with resolved file path as file.
-   * @param {string} file File name.
-   * @param {options} options Configuration options.
-   */
-
-  export function asFile(
-    file: string,
-    options: Options
-  ): Promise<Module | null> {
-    return new Promise(resolve => {
-      let pass = true;
-      [
-        /\.d\.ts$/,
-        new RegExp(`\\.(?:spec|test)\\.${options.fileExtension}`),
-        new RegExp(`^${options.fileName}\\.${options.fileExtension}`),
-      ]
-        .concat(
-          options.ignoreFiles
-            ? options.ignoreFiles.map(
-                (name: string) =>
-                  new RegExp(
-                    /^\//.test(name)
-                      ? name.substring(1, name.length - 1)
-                      : `^${path.basename(
-                          name,
-                          '.' + options.fileExtension
-                        )}\\.${options.fileExtension}`
-                  )
-              )
-            : []
-        )
-        .forEach((re: RegExp) => {
-          if (
-            !new RegExp(`\\.${options.fileExtension}$`).test(file) ||
-            re.test(file)
-          ) {
-            if (pass) {
-              pass = false;
-            }
-          }
-        });
-      if (pass) {
-        resolve({
-          isIndex: false,
-          name: path.basename(file, '.' + options.fileExtension),
-        });
-      } else {
-        resolve(null);
-      }
-    });
-  }
-
-  /**
-   * Returns proper module name in cases where file or directory name contains
-   * non-standard characters.
+   * Compares provided data strings with each other and returns true if no
+   * differences were found. Line starting with double slash (comments) are
+   * excluded from the comparison.
    *
-   * @param module Module name.
+   * @param data List of data strings to be compared.
    */
 
-  export function asName(module: string) {
+  export function compare(...data: string[]): boolean {
+    return data
+      .slice(1)
+      .map(item => hash(data[0]) == hash(item))
+      .includes(false);
+  }
+
+  /**
+   * Returns contents of generated index files from list of modules.
+   * @param modules List of modules.
+   * @param contents Initial file contents.
+   */
+
+  export function create(modules: Module[], contents: string = ''): string {
+    contents = modules.reduce((str, module) => {
+      return (
+        str +
+        (module.isIndex
+          ? `import * as ${Module.name(module.path)} from './${
+              module.path
+            }';\r\n`
+          : `export { default as ${Module.name(module.path)} } from './${
+              module.path
+            }';\r\n`)
+      );
+    }, contents);
+    const index = modules.filter(module => module.isIndex === true);
+    if (index.length) {
+      contents += `export { ${index
+        .map(module => Module.name(module.path))
+        .join(', ')} };\r\n`;
+    }
+    return contents;
+  }
+
+  /**
+   * Returns hash of provided data string.
+   * @param data Source data string.
+   */
+
+  function hash(data: string): string {
+    return crypto
+      .createHash('md5')
+      .update(
+        data
+          .split('\r\n')
+          .map(line => (/^\/\//.test(line) ? '' : line))
+          .join()
+      )
+      .digest('hex');
+  }
+}
+
+namespace Module {
+  /**
+   * Returns modified module name from provided module path. This is needed to
+   * filter out any not allowed characters from module name. Without it,
+   * exported module names could result in gibberish and would not work.
+   *
+   * @param src Module name.
+   */
+
+  export function name(src: string): string {
     const chars = 'a-zA-Z0-9';
-    return module
+    return src
       .replace(new RegExp(`^[^${chars}]+`), '')
       .replace(new RegExp(`[^${chars}]+$`), '')
       .replace(new RegExp(`[^${chars}]+([${chars}])`, 'g'), (_match, $1) => {
         return $1.toUpperCase();
       });
   }
-}
 
-/**
- * Compares hash of two or more data strings and returns true if no differences
- * were found. Lines that start with double slash (comments) are automatically
- * ignored and not taken into account by the comparison.
- *
- * @param {string[]} data List of data strings to be compared.
- */
+  /**
+   * Creates index file with default exports according to a list of file names
+   * that passed the ignore filter and returns a promise with object containing
+   * index file path and type. If index file already exists, list of exports is
+   * instead compared to generated content and updated only when needed.
+   *
+   * @param rc Path to configuration file.
+   * @param options Options object.
+   */
 
-function compareContents(...data: string[]): boolean {
-  let pass = true;
-  if (data.length) {
-    let master = getHash(data[0]);
-    data.slice(1).forEach(contents => {
-      if (master != getHash(contents)) {
-        if (pass) {
-          pass = false;
+  export function list(rc: string, options: Options): Promise<Module[]> {
+    return new Promise((resolve, reject) => {
+      const root = path.dirname(rc);
+      fs.readdir(root, (err, files) => {
+        if (err) {
+          console.log(`Cannot read ${root} folder.`);
+          reject(err);
         }
-      }
+        const promises: Promise<ModuleInList>[] = files.map(
+          file =>
+            new Promise((success, fail) => {
+              fs.stat(path.join(root, file), (err, stats) => {
+                if (err) {
+                  console.log(`Cannot read ${file} file.`);
+                  fail(err);
+                }
+                if (stats.isDirectory()) {
+                  Resolve.asDirectory(path.join(root, file), options)
+                    .then(result => {
+                      success(result);
+                    })
+                    .catch(err => {
+                      fail(err);
+                    });
+                } else {
+                  Resolve.asFile(file, options)
+                    .then(result => {
+                      success(result);
+                    })
+                    .catch(err => {
+                      fail(err);
+                    });
+                }
+              });
+            })
+        );
+        Promise.all(promises)
+          .then(modules => {
+            let list: Module[] = <Module[]>modules.filter(
+              module => module !== null
+            );
+            resolve(
+              list.sort((a, b) => {
+                if (a.isIndex) return -1;
+                if (b.isIndex) return 1;
+                if (Module.name(a.path) < Module.name(b.path)) return -1;
+                if (Module.name(a.path) > Module.name(b.path)) return 1;
+                return 0;
+              })
+            );
+          })
+          .catch(err => {
+            console.log(`Failed to read files.`);
+            reject(err);
+          });
+      });
     });
   }
-  return pass;
-}
 
-/**
- * Returns contents for index file generated from list of modules.
- * @param {object[]} modules List of modules to be imported.
- */
+  namespace Resolve {
+    /**
+     * Resolve path as directory and returns a promise with module information.
+     * @param rc Path to configuration file.
+     * @param options Options object.
+     */
 
-function createContents(modules: Module[]): string {
-  let src = '';
-  if (modules.length) {
-    const index = modules.filter(module => module.isIndex === true);
-    src = modules.reduce((src, module) => {
-      return (
-        src +
-        (module.isIndex
-          ? `import * as ${ResolveModule.asName(module.name)} from './${
-              module.name
-            }';\r\n`
-          : `export { default as ${ResolveModule.asName(
-              module.name
-            )} } from './${module.name}';\r\n`)
+    export function asDirectory(
+      file: string,
+      options: Options
+    ): Promise<ModuleInList> {
+      return new Promise((resolve, reject) => {
+        if (options.recursiveSearch) {
+          Core.read(file)
+            .then(files => {
+              if (files.length) {
+                Options.read(files[0], options)
+                  .then(options => {
+                    Module.list(files[0], Object.assign({}, options))
+                      .then(modules => {
+                        if (modules.length) {
+                          resolve({
+                            isIndex: true,
+                            path: `${path.basename(
+                              file,
+                              '.' + options.fileExtension
+                            )}${
+                              options.fileName != Options.defaults.fileName
+                                ? `/${options.fileName +
+                                    (options.fileExtensionInPath
+                                      ? '.' + options.fileExtension
+                                      : '')}`
+                                : ''
+                            }`,
+                          });
+                        } else {
+                          resolve(null);
+                        }
+                      })
+                      .catch(err => {
+                        reject(err);
+                      });
+                  })
+                  .catch(err => {
+                    reject(err);
+                  });
+              } else {
+                resolve(null);
+              }
+            })
+            .catch(err => {
+              reject(err);
+            });
+        } else {
+          resolve(null);
+        }
+      });
+    }
+
+    /**
+     * Resolve path as file and returns a promise with module information.
+     * @param rc Path to configuration file.
+     * @param options Options object.
+     */
+
+    export function asFile(
+      file: string,
+      options: Options
+    ): Promise<ModuleInList> {
+      return Promise.resolve(
+        [
+          /\.d\.ts$/,
+          new RegExp(`\\.(?:spec|test)\\.${options.fileExtension}`),
+          new RegExp(`^${options.fileName}\\.${options.fileExtension}`),
+        ]
+          .concat(
+            options.ignoreFiles
+              ? options.ignoreFiles.map(
+                  (name: string) =>
+                    new RegExp(
+                      /^\//.test(name)
+                        ? name.substring(1, name.length - 1)
+                        : `^${path.basename(
+                            name,
+                            '.' + options.fileExtension
+                          )}\\.${options.fileExtension}`
+                    )
+                )
+              : []
+          )
+          .map(
+            re =>
+              !new RegExp(`\\.${options.fileExtension}$`).test(file) ||
+              re.test(file)
+          )
+          .includes(true)
+          ? null
+          : {
+              isIndex: false,
+              path: options.fileExtensionInPath
+                ? file
+                : path.basename(file, '.' + options.fileExtension),
+            }
       );
-    }, src);
-    if (index.length) {
-      src =
-        src +
-        `export { ${index
-          .map(module => ResolveModule.asName(module.name))
-          .join(', ')} };\r\n`;
     }
   }
-  return src;
 }
 
-/**
- * Creates index file with default exports according to a list of file names
- * that passed the ignore filter and returns a promise with index file path. If
- * index file already exists, it compares the list of exports with the current
- * list and generates new content only when needed.
- *
- * @param {string} rc Path to configuration file.
- * @param {object} options Configuration options.
- */
+namespace Options {
+  /**
+   * Default values for options object.
+   */
 
-function createFile(rc: string, options: Options): Promise<string> {
-  return new Promise((resolve, reject) => {
-    getModules(rc, options)
-      .then(modules => {
-        let index = path.join(
-          path.dirname(rc),
-          `${options.fileName}.${options.fileExtension}`
-        );
-        let contents: string = createContents(modules);
-        if (modules.length) {
-          fs.access(index, fs.constants.R_OK, err => {
-            if (err) {
-              fs.writeFile(index, contents, err => {
-                if (err) {
-                  console.log(`Cannot write ${index} file.`);
-                  reject(err);
-                }
-                resolve(index);
-              });
-            } else {
-              fs.readFile(index, 'utf8', (err, data) => {
-                if (err) {
-                  console.log(`Cannot read ${index} file.`);
-                  reject(err);
-                }
-                if (!compareContents(contents, data)) {
-                  fs.writeFile(index, contents, err => {
-                    if (err) {
-                      console.log(`Cannot write ${index} file.`);
-                      reject(err);
-                    }
-                    resolve(index);
-                  });
-                }
-              });
-            }
-          });
-        } else {
-          fs.access(index, err => {
-            if (!err) {
-              fs.unlink(index, err => {
-                if (err) {
-                  console.log(`Cannot unlink ${index} file.`);
-                  reject(err);
-                }
-              });
-            }
-          });
+  export const defaults: Options = {
+    fileExtension: 'js',
+    fileExtensionInPath: false,
+    fileName: 'index',
+    ignoreFiles: [],
+    recursiveSearch: true,
+  };
+
+  /**
+   * Reads configuration file and returns a promise with json contents.
+   * @param rc Path to configuration file.
+   */
+
+  export function read(rc: string, options: Options = {}): Promise<Options> {
+    return new Promise((resolve, reject) => {
+      fs.readFile(rc, 'utf8', (err, json) => {
+        if (err) {
+          console.log(`Cannot read ${rc} file.`);
+          reject(err);
         }
-      })
-      .catch(err => {
-        reject(err);
+        options = Object.keys(options)
+          .filter(key => options[key] !== undefined)
+          .reduce((object: Options, key) => {
+            object[key] = options[key];
+            return object;
+          }, {});
+        resolve(Object.assign({}, defaults, options, JSON.parse(json || '{}')));
       });
-  });
-}
-
-/**
- * Returns computed hash from provided data string.
- * @param {string} data Data string.
- */
-
-function getHash(data: string): string {
-  return crypto
-    .createHash('md5')
-    .update(
-      data
-        .split('\r\n')
-        .map(line => (/^\/\//.test(line) ? '' : line))
-        .join()
-    )
-    .digest('hex');
-}
-
-/**
- * Reads through directory in which the configuration file is placed in and
- * returns a promise with list of modules as parameter.
- *
- * @param {string} rc Path to configuration file.
- * @param {object} options Configuration options.
- */
-
-function getModules(rc: string, options: Options): Promise<Module[]> {
-  const root = path.dirname(rc);
-  return new Promise((resolve, reject) => {
-    fs.readdir(root, (err, files) => {
-      if (err) {
-        console.log(`Cannot read ${root} folder.`);
-        reject(err);
-      }
-      const promises: Promise<Module | null>[] = files.map(
-        file =>
-          new Promise((success, fail) => {
-            fs.stat(path.join(root, file), (err, stats) => {
-              if (err) {
-                fail(err);
-              }
-              if (stats.isDirectory()) {
-                ResolveModule.asDirectory(root, file, options).then(result => {
-                  success(result);
-                });
-              } else {
-                ResolveModule.asFile(file, options).then(result => {
-                  success(result);
-                });
-              }
-            });
-          })
-      );
-      Promise.all(promises)
-        .then(modules => {
-          let list: Module[] = <Module[]>modules.filter(
-            module => module !== null
-          );
-          resolve(
-            list.sort((a, b) => {
-              if (a.isIndex) return -1;
-              if (b.isIndex) return 1;
-              if (a.name < b.name) return -1;
-              if (a.name > b.name) return 1;
-              return 0;
-            })
-          );
-        })
-        .catch(err => {
-          if (err) {
-            console.log('Failed to read files.');
-            reject(err);
-          }
-        });
     });
-  });
+  }
 }
 
 /**
- * Reads configuration file and returns a promise with options object compiled
- * from defaults, command line arguments and json content.
- *
- * @param {string} rc Path to configuration file.
- * @param {object} args Command line options.
- */
-
-function getOptions(
-  rc: string,
-  { ext, name }: Arguments = {}
-): Promise<Options> {
-  return new Promise((resolve, reject) => {
-    fs.readFile(rc, 'utf8', (err, config) => {
-      if (err) {
-        console.log(`Cannot read ${rc} file.`);
-        reject(err);
-      }
-      resolve(
-        Object.assign(
-          <Options>{
-            fileExtension: ext || 'js',
-            fileName: name || 'index',
-            ignoreFiles: [],
-            recursiveSearch: true,
-          },
-          JSON.parse(config || '{}')
-        )
-      );
-    });
-  });
-}
-
-/**
- * Reads provided node-glob pattern and returns a promise with a list of files.
- * @param {string} pattern Node-glob pattern.
- */
-
-function readPattern(pattern: string): Promise<string[]> {
-  return new Promise((resolve, reject) => {
-    glob(`${pattern}/.esm-indexrc.json`, (err, files) => {
-      if (err) {
-        console.log('Failed to read ${pattern} pattern.');
-        reject(err);
-      }
-      resolve(files);
-    });
-  });
-}
-
-/**
- * Returns a promise with generated list of index files.
- * @param {string} pattern Node-glob pattern.
- * @param {object} options Configuration options.
+ * Returns a promise with list objects for generated index files.
+ * @param pattern Node-glob pattern.
+ * @param options Options object.
  */
 
 export default function esmIndex(
-  pattern: string = './**',
-  options: Options = {},
-  args: Arguments = {}
-): Promise<string[]> {
+  pattern: string = '**',
+  options: Options = {}
+): Promise<Result[]> {
   return new Promise((resolve, reject) => {
-    readPattern(pattern)
-      .then(files => {
-        let promises: Promise<string>[] = [];
-        files.forEach(rc => {
-          promises.push(
-            new Promise((success, fail) => {
-              getOptions(rc, args)
-                .then(data => {
-                  createFile(rc, Object.assign({}, options, data));
-                  success(rc);
-                })
-                .catch(err => {
-                  fail(err);
-                });
-            })
-          );
-        });
-        Promise.all(promises)
-          .then(index => {
-            resolve(index);
+    Core.read(pattern).then(files => {
+      const promises: Promise<Result>[] = files.map(
+        rc =>
+          new Promise((success, fail) => {
+            Core.write(rc, options)
+              .then(({ code, message, options }) => {
+                success({ code, message, options, rc });
+              })
+              .catch(err => {
+                fail(err);
+              });
           })
-          .catch(err => {
-            reject(err);
-          });
-      })
-      .catch(err => {
-        reject(err);
-      });
+      );
+      Promise.all(promises)
+        .then(results => {
+          resolve(results);
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
   });
 }
