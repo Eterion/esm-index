@@ -8,7 +8,7 @@ import esmIndex from './index';
 // List of custom command line arguments with descriptions.
 const args = yargs
   .describe('ext', 'File extension used for index files and internal filter')
-  .describe('log', 'Displays log messages when modules are evaluated')
+  .describe('log', 'Enable log messages when modules are evaluated')
   .describe('name', 'File name used for the index files')
   .describe('watch', 'Enables watch mode').argv;
 
