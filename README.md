@@ -44,13 +44,13 @@ with ES6 default exports.
 The following options can be inserted as second parameter of `esmIndex` function
 and into json configuration files.
 
-| Option                | Description                                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `fileExtension`       | Include only files with this file extension. Defaults to `'js'`.                                             |
-| `fileExtensionInPath` | If set to true, file extensions will be included in module paths. Disabled by default.                       |
-| `fileName`            | File name of the generated index file. Defaults to `'index'`.                                                |
-| `ignoreFiles`         | List of strings or regular expressions (properly escaped, starts and ends with /) of ignored file names.     |
-| `recursiveSearch`     | If enabled, child folders with configuration files will be added to export list as well. Enabled by default. |
+| Option                | Description                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| `fileExtension`       | Include only files with this file extension. Defaults to `'js'`.                                 |
+| `fileExtensionInPath` | If set to true, file extensions will be included in module paths. Disabled by default.           |
+| `fileName`            | File name of the generated index file. Defaults to `'index'`.                                    |
+| `ignoreFiles`         | List of ignored file names                                                                       |
+| `recursiveSearch`     | Child folders with configuration files will be added to export list as well. Enabled by default. |
 
 ## Command Line
 
