@@ -22,11 +22,12 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --rootDir \"./src\" --outDir \"./dist\"",
+    "prepublish": "yarn release",
+    "release": "yarn build && yarn uglify-bin && yarn uglify-index",
     "start": "node \"./dist/bin.js\"",
     "test": "yarn build && yarn start",
     "uglify-bin": "uglifyjs \"./dist/bin.js\" -c -m -o \"./dist/bin.js\"",
     "uglify-index": "uglifyjs \"./dist/index.js\" -c -m -o \"./dist/index.js\"",
-    "release": "yarn build && yarn uglify-bin && yarn uglify-index",
     "watch": "yarn start --watch"
   },
   "dependencies": {
