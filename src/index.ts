@@ -37,7 +37,7 @@ namespace Core {
     return new Promise((resolve, reject) => {
       const configName = '.esm-indexrc.json';
       glob(
-        `./${pattern.replace(new RegExp(`/${configName}$`), '')}/${configName}`,
+        `${pattern.replace(new RegExp(`/${configName}$`), '')}/${configName}`,
         (err, files) => {
           if (err) {
             console.log(`Failed to read ${pattern} pattern.`);
@@ -450,7 +450,7 @@ namespace Options {
  */
 
 export default function esmIndex(
-  pattern: string = '**',
+  pattern: string = './**',
   options: Options = {}
 ): Promise<Result[]> {
   return new Promise((resolve, reject) => {
