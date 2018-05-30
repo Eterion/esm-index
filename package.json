@@ -17,33 +17,34 @@
   ],
   "bin": "./dist/bin.js",
   "main": "./dist/index.js",
+  "typings": "./index.d.ts",
   "repository": "https://github.com/Eterion/esm-index.git",
   "author": "Eterion <Eterion@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "build-watch": "tsc --rootDir \"./src\" --outDir \"./dist\" --watch",
     "build": "tsc --rootDir \"./src\" --outDir \"./dist\"",
+    "demo": "node \"./dist/bin.js\"",
     "prepublish": "yarn release",
+    "prettier": "prettier --write \"**/*.{ts,md}\"",
     "release": "yarn build && yarn uglify-bin && yarn uglify-index",
-    "start": "node \"./dist/bin.js\"",
-    "test": "yarn build && yarn start",
     "uglify-bin": "uglifyjs \"./dist/bin.js\" -c -m -o \"./dist/bin.js\"",
     "uglify-index": "uglifyjs \"./dist/index.js\" -c -m -o \"./dist/index.js\"",
-    "watch": "yarn start --watch"
+    "watch": "yarn build --watch"
   },
   "dependencies": {
     "chokidar": "^2.0.3",
     "core-js": "^2.5.6",
-    "glob": "^7.1.2",
     "yargs": "^11.0.0"
   },
   "devDependencies": {
     "@types/chokidar": "^1.7.5",
     "@types/core-js": "^0.9.46",
-    "@types/glob": "^5.0.35",
+    "@types/cosmiconfig": "^5.0.1",
     "@types/node": "^10.1.2",
     "@types/uglify-js": "^3.0.2",
     "@types/yargs": "^11.0.0",
+    "cosmiconfig": "^5.0.5",
+    "prettier": "^1.13.0",
     "ts-node": "^6.0.3",
     "typescript": "^2.8.3",
     "uglify-js": "^3.3.27"
