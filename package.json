@@ -34,6 +34,7 @@
   "dependencies": {
     "chokidar": "^2.0.3",
     "core-js": "^2.5.6",
+    "cosmiconfig": "^5.0.5",
     "yargs": "^11.0.0"
   },
   "devDependencies": {
@@ -43,7 +44,6 @@
     "@types/node": "^10.1.2",
     "@types/uglify-js": "^3.0.2",
     "@types/yargs": "^11.0.0",
-    "cosmiconfig": "^5.0.5",
     "prettier": "^1.13.0",
     "ts-node": "^6.0.3",
     "typescript": "^2.8.3",
