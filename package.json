@@ -24,7 +24,7 @@
   "scripts": {
     "build": "tsc --rootDir \"./src\" --outDir \"./dist\"",
     "demo": "node \"./dist/bin.js\"",
-    "prepublish": "yarn release",
+    "prepublishOnly": "yarn release",
     "prettier": "prettier --write \"**/*.{ts,md}\"",
     "release": "yarn build && yarn uglify-bin && yarn uglify-index",
     "uglify-bin": "uglifyjs \"./dist/bin.js\" -c -m -o \"./dist/bin.js\"",
