@@ -1,4 +1,4 @@
-import options from 'args/options';
+import options from 'params/options';
 import { Object } from 'core-js';
 import { Config, Path } from 'types';
 import filterKeys from 'utils/filterKeys';

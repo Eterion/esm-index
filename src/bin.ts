@@ -1,5 +1,5 @@
-import config from 'args/config';
-import options from 'args/options';
+import config from 'params/config';
+import options from 'params/options';
 import esmIndex from 'index';
 import filterKeys from 'utils/filterKeys';
 import * as yargs from 'yargs';
