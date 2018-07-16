@@ -3,9 +3,9 @@ import { Module, Path } from 'types';
 
 /**
  * Returns contents of index file.
- * @param modules List of modules.
- * @param options Options.
- * @param contents Initial file contents.
+ * @param {object[]} modules List of modules.
+ * @param {object} options Options.
+ * @param {string} contents Initial file contents.
  */
 
 export default function(

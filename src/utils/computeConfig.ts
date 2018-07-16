@@ -7,7 +7,7 @@ import readCosmiconfig from 'utils/readCosmiconfig';
 
 /**
  * Returns a promise configuration with properly computed properties.
- * @param params Configuration object / cli parameters.
+ * @param {object} params Configuration object / cli parameters.
  */
 
 export default function(params: Config = {}): Promise<Computed> {

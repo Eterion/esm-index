@@ -2,7 +2,7 @@ import hash from 'contents/hash';
 
 /**
  * Returns true if no differences are found between provided data strings.
- * @param data List of data strings to be compared.
+ * @param {string|string[]} data List of data strings to be compared.
  */
 
 export default function(...data: string[]): boolean {

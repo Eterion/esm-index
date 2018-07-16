@@ -1,12 +1,12 @@
-import options from 'params/options';
 import { Object } from 'core-js';
+import options from 'params/options';
 import { Config, Path } from 'types';
 import filterKeys from 'utils/filterKeys';
 
 /**
  * Returns array of paths with properly computed properties.
- * @param config Configuration object.
- * @param paths Array of paths.
+ * @param {object} config Configuration object.
+ * @param {string[]|object[]} paths Array of paths.
  */
 
 export default function(config: Config, paths: (string | Path)[] = []): Path[] {
