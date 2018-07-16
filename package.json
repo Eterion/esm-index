@@ -23,14 +23,17 @@
     "index.js"
   ],
   "scripts": {
-    "build": "webpack -r tsconfig-paths/register --mode development",
+    "build": "webpack --mode development",
     "clean": "del-cli \"bin.js\" \"index.js\"",
     "prepack": "yarn release",
     "prettier": "prettier --write \"**/*.{ts,md}\"",
-    "release": "webpack -r tsconfig-paths/register --mode production",
+    "release": "webpack --mode production",
     "watch": "yarn build --watch"
   },
-  "dependencies": {},
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7"
+  },
   "devDependencies": {
     "@types/node": "^10.5.2",
     "@types/webpack": "^4.4.5",
@@ -41,8 +44,6 @@
     "prettier": "^1.13.7",
     "ts-loader": "^4.4.2",
     "ts-node": "^7.0.0",
-    "tsconfig-paths": "^3.4.2",
-    "tsconfig-paths-webpack-plugin": "^3.2.0",
     "typescript": "^2.9.2",
     "webpack": "^4.16.0",
     "webpack-cli": "^3.0.8",
