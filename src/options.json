@@ -1,0 +1,56 @@
+{
+  "fileExtension": {
+    "alias": "e",
+    "default": "js",
+    "description": "File extension of generated index file.",
+    "type": "string"
+  },
+  "fileName": {
+    "alias": "n",
+    "default": "index",
+    "description": "File name of generated index file.",
+    "type": "string"
+  },
+  "ignoreFiles": {
+    "alias": "i",
+    "default": [],
+    "description": "List of ignored file names.",
+    "type": "array"
+  },
+  "moduleExtension": {
+    "alias": "me",
+    "default": "js",
+    "description": "File extension of modules.",
+    "type": "string"
+  },
+  "moduleExtensionInPath": {
+    "alias": "mep",
+    "default": false,
+    "description": "Adds module extension to path.",
+    "type": "boolean"
+  },
+  "moduleTemplate": {
+    "alias": "mt",
+    "default": "export { default as {name} } from '{path}';",
+    "description": "Template for module export.",
+    "type": "string"
+  },
+  "recursion": {
+    "alias": "r",
+    "default": true,
+    "description": "Enable recursion.",
+    "type": "boolean"
+  },
+  "recursionTemplate": {
+    "alias": "rt",
+    "default": "import * as {name} from '{path}';",
+    "description": "Template for recursion.",
+    "type": "string"
+  },
+  "recursionTemplateExport": {
+    "alias": "rte",
+    "default": "export { {moduleList} };",
+    "description": "Template for recursion export.",
+    "type": "string"
+  }
+}
