@@ -12,6 +12,12 @@ export interface Config extends Options {
   watch?: boolean;
 }
 
+export interface Module {
+  hasRecursion?: boolean;
+  name: string;
+  path: string;
+}
+
 export interface Options {
   fileExtension?: string;
   fileName?: string;
