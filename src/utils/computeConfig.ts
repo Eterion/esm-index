@@ -1,6 +1,7 @@
 import { Object } from 'core-js';
 import { Computed, Config } from 'types';
 import computePaths from 'utils/computePaths';
+import filterKeys from 'utils/filterKeys';
 import getArgumentDefaults from 'utils/getArgumentDefaults';
 import readCosmiconfig from 'utils/readCosmiconfig';
 
@@ -19,12 +20,16 @@ export default function(params: Config = {}): Promise<Computed> {
           params,
           cosmiconfig
         );
-        resolve(<Computed>Object.assign({}, config, {
-          paths: computePaths(config, [
-            ...(params.paths || []),
-            ...(cosmiconfig.paths || []),
-          ]),
-        }));
+        resolve(<Computed>Object.assign(
+          {},
+          filterKeys(config, ...Object.keys(require('params/config').default)),
+          {
+            paths: computePaths(config, [
+              ...(params.paths || []),
+              ...(cosmiconfig.paths || []),
+            ]),
+          }
+        ));
       })
       .catch(err => {
         reject(err);
