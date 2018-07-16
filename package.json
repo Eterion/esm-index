@@ -31,10 +31,12 @@
     "watch": "yarn build --watch"
   },
   "dependencies": {
+    "core-js": "^2.5.7",
     "fs": "^0.0.1-security",
     "path": "^0.12.7"
   },
   "devDependencies": {
+    "@types/core-js": "^2.5.0",
     "@types/node": "^10.5.2",
     "@types/webpack": "^4.4.5",
     "@types/webpack-node-externals": "^1.6.3",
