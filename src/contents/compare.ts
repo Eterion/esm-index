@@ -1,4 +1,4 @@
-import hash from './hash';
+import hash from 'contents/hash';
 
 /**
  * Returns true if no differences are found between provided data strings.

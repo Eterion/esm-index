@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
+    "baseUrl": "src",
     "lib": ["esnext", "dom"],
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "paths": { "types": ["../index.d.ts"] },
     "strict": true,
     "target": "es5"
   }
