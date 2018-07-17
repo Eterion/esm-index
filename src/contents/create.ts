@@ -10,21 +10,21 @@ import { Module, Path } from 'types';
 
 export default function(
   modules: Module[],
-  options: Path,
+  { moduleTemplate, recursionTemplate, recursionTemplateExport }: Path,
   contents: string = ''
 ): string {
   const eol = '\r\n';
   modules.reduce((str, module) => {
     const useTemplate = module.hasRecursion
-      ? options.recursionTemplate
-      : options.moduleTemplate;
+      ? recursionTemplate
+      : moduleTemplate;
     return useTemplate ? str + template(useTemplate, module) + eol : '';
   }, contents);
   const dirs = modules.filter(module => module.hasRecursion);
   if (dirs) {
-    if (options.recursionTemplateExport) {
+    if (recursionTemplateExport) {
       contents +=
-        template(options.recursionTemplateExport, {
+        template(recursionTemplateExport, {
           moduleList: dirs.map(module => module.name).join(', '),
         }) + eol;
     }

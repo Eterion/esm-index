@@ -9,12 +9,13 @@ import { Module, Path } from 'types';
  * @param {object} options Options.
  */
 
-function isIgnored(file: string, regexp: RegExp[], options: Path): boolean {
+function isIgnored(
+  file: string,
+  regexp: RegExp[],
+  { moduleExtension }: Path
+): boolean {
   return regexp
-    .map(
-      re =>
-        !new RegExp(`\.${options.moduleExtension}$`).test(file) || re.test(file)
-    )
+    .map(re => !new RegExp(`\.${moduleExtension}$`).test(file) || re.test(file))
     .includes(true);
 }
 
@@ -23,16 +24,21 @@ function isIgnored(file: string, regexp: RegExp[], options: Path): boolean {
  * @param {object} options Options.
  */
 
-function ignoreList(options: Path): RegExp[] {
+function ignoreList({
+  fileExtension,
+  fileName,
+  ignoreFiles,
+  moduleExtension,
+}: Path): RegExp[] {
   return [
-    new RegExp(`\.(?:d|spec|test)\.${options.moduleExtension}`),
-    new RegExp(`^${options.fileName}\.${options.fileExtension}$`),
-    ...(options.ignoreFiles
-      ? options.ignoreFiles.map(name => {
+    new RegExp(`\.(?:d|spec|test)\.${moduleExtension}`),
+    new RegExp(`^${fileName}\.${fileExtension}$`),
+    ...(ignoreFiles
+      ? ignoreFiles.map(name => {
           return new RegExp(
             typeof name == 'string' && /^\//.test(name) && /\/$/.test(name)
               ? name.substring(1, name.length - 1)
-              : `^${name}\.${options.moduleExtension}$`
+              : `^${name}\.${moduleExtension}$`
           );
         })
       : []),
@@ -49,7 +55,7 @@ export default function(file: string, options: Path): Module | null {
   if (isIgnored(file, ignoreList(options), options)) {
     return null;
   }
-  const fileName = basename(file, '.' + options.moduleExtension);
+  const fileName = basename(file, '.' + options.fileExtension);
   return {
     name: name(fileName),
     path: `./${options.moduleExtensionInPath ? file : fileName}`,
