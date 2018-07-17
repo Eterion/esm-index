@@ -55,7 +55,7 @@ export default function(file: string, options: Path): Module | null {
   if (isIgnored(file, ignoreList(options), options)) {
     return null;
   }
-  const fileName = basename(file, '.' + options.fileExtension);
+  const fileName = basename(file, '.' + options.moduleExtension);
   return {
     name: name(fileName),
     path: `./${options.moduleExtensionInPath ? file : fileName}`,
