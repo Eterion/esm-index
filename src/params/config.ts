@@ -19,6 +19,12 @@ export default <{ [index: string]: Options }>{
     describe: 'List of paths that should be analyzed.',
     type: 'array',
   },
+  test: {
+    alias: 't',
+    default: false,
+    describe: 'Enables test mode.',
+    type: 'boolean',
+  },
   version: {
     alias: 'v',
     default: false,
