@@ -14,14 +14,14 @@ export default function(
   contents: string = ''
 ): string {
   const eol = '\r\n';
-  modules.reduce((str, module) => {
+  contents = modules.reduce((str, module) => {
     const useTemplate = module.hasRecursion
       ? recursionTemplate
       : moduleTemplate;
     return useTemplate ? str + template(useTemplate, module) + eol : '';
   }, contents);
   const dirs = modules.filter(module => module.hasRecursion);
-  if (dirs) {
+  if (dirs.length) {
     if (recursionTemplateExport) {
       contents +=
         template(recursionTemplateExport, {
