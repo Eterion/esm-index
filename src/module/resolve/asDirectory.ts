@@ -1,7 +1,7 @@
 import name from 'module/name';
 import { basename } from 'path';
 import { Module, Path } from 'types';
-import getArgumentDefaults from 'utils/getArgumentDefaults';
+import getParamDefaults from 'utils/getParamDefaults';
 
 /**
  * Returns computed file path for index file based on options.
@@ -13,7 +13,7 @@ function computeFilePath({
   fileName,
   fileExtension,
 }: Path): string {
-  return moduleExtensionInPath || fileName != getArgumentDefaults().fileName
+  return moduleExtensionInPath || fileName != getParamDefaults().fileName
     ? `/${fileName}${moduleExtensionInPath ? '.' + fileExtension : ''}`
     : moduleExtensionInPath
       ? `/${fileName}.${fileExtension}`
