@@ -1,6 +1,6 @@
 import { access, unlink } from 'fs';
 import idle from 'module/fs/idle';
-import { Callback, Master } from 'types';
+import { Fs, Master } from 'types';
 
 /**
  * Removes index file and returns a promise with object of action and message.
@@ -8,10 +8,7 @@ import { Callback, Master } from 'types';
  * @param {object} config Configuration object.
  */
 
-export default function(
-  path: string,
-  { log, test }: Master
-): Promise<Callback> {
+export default function(path: string, { log, test }: Master): Promise<Fs> {
   return new Promise((resolve, reject) => {
     function doResolve() {
       const message = `Removed: "${path}"`;

@@ -1,9 +1,7 @@
-export interface Callback {
-  action: 'add' | 'no-change' | 'update' | 'remove';
-  content?: string;
-  message?: string;
-  modules?: Module[];
-  options?: Path;
+export interface Callback extends Fs {
+  content: string;
+  modules: Module[];
+  options: Path;
 }
 
 export interface Config extends Options {
@@ -11,6 +9,11 @@ export interface Config extends Options {
   paths?: (string | PathInput)[];
   test?: boolean;
   watch?: boolean;
+}
+
+export interface Fs {
+  action: 'add' | 'no-change' | 'update' | 'remove';
+  message: string;
 }
 
 export interface Master extends Config {

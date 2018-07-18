@@ -1,7 +1,7 @@
 import compare from 'contents/compare';
 import { readFile, writeFile } from 'fs';
 import idle from 'module/fs/idle';
-import { Callback, Master } from 'types';
+import { Fs, Master } from 'types';
 
 /**
  * Updates index file and returns a promise with object of action and message.
@@ -14,7 +14,7 @@ export default function(
   path: string,
   content: string,
   { log, test }: Master
-): Promise<Callback> {
+): Promise<Fs> {
   return new Promise((resolve, reject) => {
     function doResolve() {
       const message = `Updated: "${path}"`;

@@ -1,5 +1,5 @@
 import { writeFile } from 'fs';
-import { Callback, Master } from 'types';
+import { Fs, Master } from 'types';
 
 /**
  * Creates index file and returns a promise with object of action and message.
@@ -12,7 +12,7 @@ export default function(
   path: string,
   content: string,
   { log, test }: Master
-): Promise<Callback> {
+): Promise<Fs> {
   return new Promise((resolve, reject) => {
     function doResolve() {
       const message = `Created: "${path}"`;
