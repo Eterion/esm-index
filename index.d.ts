@@ -1,9 +1,9 @@
 export interface Callback {
   action: 'add' | 'no-change' | 'update' | 'remove';
-  content: string;
-  message: string;
-  modules: Module[];
-  options: Path;
+  content?: string;
+  message?: string;
+  modules?: Module[];
+  options?: Path;
 }
 
 export interface Config extends Options {
