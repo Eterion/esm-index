@@ -1,20 +1,18 @@
+import esmIndex from 'index';
 import config from 'params/config';
 import options from 'params/options';
-import esmIndex from 'index';
-import filterKeys from 'utils/filterKeys';
+import { Config } from 'types';
+import filterObjectKeys from 'utils/filterObjectKeys';
 import * as yargs from 'yargs';
 
-esmIndex(
-  filterKeys(
+esmIndex(<Config>(
+  filterObjectKeys(
     yargs.options({ ...config, ...options }).argv,
-    ...[
-      ...Object.keys(config).filter(key => !['help', 'version'].includes(key)),
-      ...Object.keys(options),
-    ]
+    ...[...Object.keys(config), ...Object.keys(options)]
   )
-)
+))
   .then(callback => {
-    console.info(callback);
+    console.info('callback: ', callback);
   })
   .catch(err => {
     console.error(err);

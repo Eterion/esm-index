@@ -1,15 +1,20 @@
 export interface Callback {
   action: 'add' | 'no-change' | 'update' | 'remove';
-}
-
-export interface Computed extends Config {
-  paths: Path[];
+  content: string;
+  message: string;
+  modules: Module[];
+  options: Path;
 }
 
 export interface Config extends Options {
   log?: boolean;
-  paths?: (string | Path)[];
+  paths?: (string | PathInput)[];
+  test?: boolean;
   watch?: boolean;
+}
+
+export interface Master extends Config {
+  paths: Path[];
 }
 
 export interface Module {
@@ -30,7 +35,11 @@ export interface Options {
   recursionTemplateExport?: string;
 }
 
-export interface Path extends Options {
+export interface PathInput extends Options {
+  path: string | string[];
+}
+
+export interface Path extends PathInput {
   path: string;
 }
 
