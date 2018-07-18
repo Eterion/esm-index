@@ -15,7 +15,8 @@ export default function(config?: Config): Promise<Callback[]> {
     toMaster(config)
       .then(master => {
         const dups = findDuplicateInArray(getPathList(master.paths));
-        if (dups.length) reject(`Found duplicated paths: ${dups.join(', ')}`);
+        if (dups.length)
+          reject(`Error: Found duplicated paths (${dups.join(', ')})`);
         Promise.all(master.paths.map(options => write(options, master)))
           .then(modules => {
             resolve(modules);

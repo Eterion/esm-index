@@ -26,7 +26,7 @@ export default function(
           ? doResolve()
           : unlink(path, err => {
               if (err) {
-                console.error(`Error: cannot remove "${path}"`);
+                console.error(`Error: Cannot remove "${path}"`);
                 reject(err);
               } else {
                 doResolve();

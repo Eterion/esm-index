@@ -25,13 +25,13 @@ export default function(
       ? doResolve()
       : readFile(path, 'utf8', (err, data) => {
           if (err) {
-            console.error(`Error: cannot read "${path}"`);
+            console.error(`Error: Cannot read "${path}"`);
             reject(err);
           } else {
             if (compare(content, data)) {
               writeFile(path, content, err => {
                 if (err) {
-                  console.error(`Error: cannot write "${path}"`);
+                  console.error(`Error: Cannot write "${path}"`);
                   reject(err);
                 } else {
                   doResolve();

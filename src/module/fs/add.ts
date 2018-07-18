@@ -23,7 +23,7 @@ export default function(
       ? doResolve()
       : writeFile(path, content, err => {
           if (err) {
-            console.error(`Error: cannot write "${path}"`);
+            console.error(`Error: Cannot write "${path}"`);
             reject(err);
           } else {
             doResolve();
