@@ -6,7 +6,7 @@ interface Data {
 
 /**
  * Returns input object with allowed keys only. This method does not modify the
- * original object, but rather creates and returns a new one.
+ * original object, but rather returns a new one.
  *
  * @param {object} obj Input object.
  * @param {string|string[]} allowed List of allowed keys.
