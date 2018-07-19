@@ -1,3 +1,4 @@
+import { Promise } from 'core-js';
 import { access, unlink } from 'fs';
 import idle from 'module/fs/idle';
 import { Fs, Master } from 'types';

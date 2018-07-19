@@ -1,4 +1,5 @@
 import compare from 'contents/compare';
+import { Promise } from 'core-js';
 import { readFile, writeFile } from 'fs';
 import idle from 'module/fs/idle';
 import { Fs, Master } from 'types';

@@ -1,3 +1,4 @@
+import { Promise } from 'core-js';
 import { writeFile } from 'fs';
 import { Fs, Master } from 'types';
 

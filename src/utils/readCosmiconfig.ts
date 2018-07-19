@@ -1,3 +1,4 @@
+import { Promise } from 'core-js';
 import { CosmiconfigResult } from 'cosmiconfig';
 import { Config } from 'types';
 
