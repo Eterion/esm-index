@@ -1,7 +1,6 @@
 import name from 'module/name';
 import { basename } from 'path';
 import { Module, Path } from 'types';
-import getParamDefaults from 'utils/getParamDefaults';
 
 /**
  * Returns computed file path for index file based on options.
@@ -9,15 +8,14 @@ import getParamDefaults from 'utils/getParamDefaults';
  */
 
 function computeFilePath({
-  moduleExtensionInPath,
-  fileName,
   fileExtension,
+  fileExtensionInPath,
+  fileName,
+  fileNameInPath,
 }: Path): string {
-  return moduleExtensionInPath || fileName != getParamDefaults().fileName
-    ? `/${fileName}${moduleExtensionInPath ? '.' + fileExtension : ''}`
-    : moduleExtensionInPath
-      ? `/${fileName}.${fileExtension}`
-      : '';
+  return fileNameInPath || fileExtensionInPath
+    ? `/${fileName}${fileExtensionInPath ? '.' + fileExtension : ''}`
+    : '';
 }
 
 /**

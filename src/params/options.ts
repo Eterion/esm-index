@@ -7,11 +7,23 @@ export default <{ [index: string]: Options }>{
     describe: 'File extension of generated index file.',
     type: 'string',
   },
+  fileExtensionInPath: {
+    alias: 'fep',
+    default: false,
+    describe: 'Adds file extension to recursive paths.',
+    type: 'boolean',
+  },
   fileName: {
     alias: 'n',
     default: 'index',
     describe: 'File name of generated index file.',
     type: 'string',
+  },
+  fileNameInPath: {
+    alias: 'fnp',
+    default: false,
+    describe: 'Includes file name in recursive paths.',
+    type: 'boolean',
   },
   ignoreFiles: {
     alias: 'i',
@@ -26,7 +38,7 @@ export default <{ [index: string]: Options }>{
     type: 'string',
   },
   moduleExtensionInPath: {
-    alias: 'mei',
+    alias: 'mep',
     default: false,
     describe: 'Adds module extension to path.',
     type: 'boolean',

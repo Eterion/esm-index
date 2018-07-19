@@ -28,7 +28,9 @@ export interface Module {
 
 export interface Options {
   fileExtension?: string;
+  fileExtensionInPath?: boolean;
   fileName?: string;
+  fileNameInPath?: boolean;
   ignoreFiles?: (string | RegExp)[];
   moduleExtension?: string;
   moduleExtensionInPath?: boolean;
