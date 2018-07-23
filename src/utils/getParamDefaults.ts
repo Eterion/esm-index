@@ -9,8 +9,8 @@ interface Callback {
 
 export default function(
   obj: { [index: string]: any } = {
-    ...require('params/config'),
-    ...require('params/options'),
+    ...require('params/config').default,
+    ...require('params/options').default,
   }
 ): Callback {
   const defaults: Callback = {};

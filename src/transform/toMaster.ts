@@ -18,10 +18,9 @@ export default function(config: Config = {}): Promise<Master> {
         const params: Config = Object.assign(
           {},
           getParamDefaults(),
-          config,
-          cosmiconfig
+          cosmiconfig || config
         );
-        const paths = [...(config.paths || []), ...(params.paths || [])];
+        const paths = params.paths || [];
         resolve(<Master>filterObjectKeys(
           Object.assign({}, params, {
             paths: getPathList(paths).map(path => {

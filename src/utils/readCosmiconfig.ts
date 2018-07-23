@@ -6,12 +6,12 @@ import { Config } from 'types';
  * Returns a promise with configuration object.
  */
 
-export default function(): Promise<Config> {
+export default function(): Promise<Config | boolean> {
   return new Promise((resolve, reject) => {
     require('cosmiconfig')('esmindex')
       .search()
       .then((result: CosmiconfigResult) => {
-        resolve(<Config>(result ? result.config : {}));
+        resolve(result ? <Config>result.config : false);
       })
       .catch((err: any) => {
         reject(err);
